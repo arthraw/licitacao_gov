@@ -1,0 +1,144 @@
+version: 7.0.4
+
+type: DeclarativeSource
+
+check:
+  type: CheckStream
+  stream_names:
+    - Item_Licitacoes_Gov
+
+streams:
+  - type: DeclarativeStream
+    name: Item_Licitacoes_Gov
+    retriever:
+      type: SimpleRetriever
+      decoder:
+        type: JsonDecoder
+      paginator:
+        type: DefaultPaginator
+        page_token_option:
+          type: RequestOption
+          field_name: pagina
+          inject_into: request_parameter
+        pagination_strategy:
+          type: PageIncrement
+          page_size: 2
+          stop_condition: "{{ response['paginasRestantes'] == 0 }}"
+          start_from_page: 1
+      requester:
+        type: HttpRequester
+        url: >-
+          https://dadosabertos.compras.gov.br/modulo-legado/2_consultarItemLicitacao
+        http_method: GET
+        request_parameters:
+          modalidade: "5"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path:
+            - resultado
+    schema_loader:
+      type: InlineSchemaLoader
+      schema:
+        type: object
+        $schema: http://json-schema.org/schema#
+        properties:
+          id_compra:
+            type:
+              - string
+              - "null"
+          id_compra_item:
+            type:
+              - string
+              - "null"
+          numero_licitacao:
+            type:
+              - string
+              - "null"
+          numero_item_licitacao:
+            type:
+              - number
+              - "null"
+          uasg:
+            type:
+              - number
+              - "null"
+          criterio_julgamento:
+            type:
+              - string
+              - "null"
+          decreto_7174:
+            type:
+              - boolean
+              - "null"
+          codigo_item_material:
+            type:
+              - number
+              - "null"
+          nome_material:
+            type:
+              - string
+              - "null"
+          descricao_item:
+            type:
+              - string
+              - "null"
+          unidade:
+            type:
+              - string
+              - "null"
+          quantidade:
+            type:
+              - string
+              - "null"
+          valor_estimado:
+            type:
+              - number
+              - "null"
+          sustentavel:
+            type:
+              - boolean
+              - "null"
+          cnpj_fornecedor:
+            type:
+              - string
+              - "null"
+          cpfVencedor:
+            type:
+              - string
+              - "null"
+          beneficio:
+            type:
+              - string
+              - "null"
+          dt_alteracao:
+            type:
+              - string
+              - "null"
+        additionalProperties: true
+
+spec:
+  type: Spec
+  connection_specification:
+    type: object
+    properties: {}
+
+metadata:
+  testedStreams:
+    stream_0:
+      streamHash: ad11f9fa446b445a056b0f48d54e74059e0bc977
+    Item_Licitacoes_Gov:
+      isStale: false
+      hasRecords: true
+      streamHash: cd4b584c4c0444b7d3aea7feae9187c4f94d5826
+      hasResponse: true
+      primaryKeysAreUnique: true
+      primaryKeysArePresent: true
+      responsesAreSuccessful: true
+  autoImportSchema:
+    Item_Licitacoes_Gov: true
+
+concurrency_level:
+  type: ConcurrencyLevel
+  default_concurrency: 1

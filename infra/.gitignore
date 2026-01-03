@@ -1,0 +1,7 @@
+*.tfvars
+*.tfstate
+/.terraform/
+*.hcl
+*.backup
+*.json
+/sp_credentials.json

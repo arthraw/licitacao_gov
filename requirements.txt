@@ -1,0 +1,5 @@
+apache-airflow-providers-microsoft-azure
+apache-airflow-providers-airbyte
+apache-airflow-providers-http
+astro-sdk-python
+pytest

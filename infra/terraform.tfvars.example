@@ -1,0 +1,4 @@
+subscription_id = "COLOQUE SUA SUBSCRIPTION ID AQUI"
+synapse_admin_login = "LOGIN AQUI"
+synapse_admin_password = "SENHA AQUI"
+ip_address = "SEU IP PUBLICO AQUI"
