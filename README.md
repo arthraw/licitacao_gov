@@ -1,233 +1,257 @@
-# 🚀 Infraestrutura Synapse + Data Lake + Airflow/Airbyte
+# 📊 Pipeline de Dados de Licitações Governamentais
 
-Infraestrutura como código (IaC) para provisionar um ambiente completo de Data Lake no Azure com Synapse Analytics, incluindo Service Principal para integração com Airflow/Airbyte.
+Pipeline completo de ingestão, processamento e análise de dados de licitações do governo brasileiro, utilizando arquitetura moderna de Data Lake com camadas medallion (Bronze, Silver, Gold).
 
-## 📋 Pré-requisitos
+## 🎯 Objetivo do Projeto
 
-- **Terraform** >= 1.0
-- **Azure CLI** instalado e autenticado
-- Permissões no Azure para:
-  - Criar recursos no Resource Group "Data"
-  - Criar Service Principals no Azure AD
-  - Atribuir roles (RBAC)
+Automatizar a coleta, processamento e disponibilização de dados públicos de licitações governamentais, permitindo análises e insights sobre processos licitatórios no Brasil.
 
 ## 🏗️ Arquitetura
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│                  Azure Data Platform                    │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐        ┌─────────────────┐          │
-│  │   Airflow    │───────▶│ Service         │          │
-│  │   Airbyte    │        │ Principal       │          │
-│  └──────────────┘        └────────┬────────┘          │
-│                                   │                    │
-│                                   ▼                    │
-│         ┌─────────────────────────────────┐            │
-│         │    Synapse Workspace            │            │
-│         │  ┌──────────────────────────┐   │            │
-│         │  │   Spark Pool (3.4)       │   │            │
-│         │  │   - MemoryOptimized      │   │            │
-│         │  │   - Auto Scale (3 nodes) │   │            │
-│         │  └──────────────────────────┘   │            │
-│         └─────────────────────────────────┘            │
-│                      │                                 │
-│                      ▼                                 │
-│         ┌─────────────────────────────────┐            │
-│         │  Storage Account (ADLS Gen2)    │            │
-│         │  ┌─────────┬─────────┬────────┐ │            │
-│         │  │Transient│ Bronze  │ Silver │ │            │
-│         │  ├─────────┼─────────┼────────┤ │            │
-│         │  │  Gold   │ Archive │Synapse │ │            │
-│         │  └─────────┴─────────┴────────┘ │            │
-│         └─────────────────────────────────┘            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PIPELINE DE DADOS                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────┐      ┌──────────────┐                     │
+│  │   Airflow    │─────▶│   Airbyte    │                     │
+│  │(Orquestração)│      │  (Ingestão)  │                     │
+│  └──────────────┘      └──────┬───────┘                     │
+│                               │                             │
+│                               ▼                             │
+│                    ┌─────────────────────┐                  │
+│                    │  Azure Synapse      │                  │
+│                    │  ┌───────────────┐  │                  │
+│                    │  │  Spark Pool   │  │                  │
+│                    │  │  (Processing) │  │                  │
+│                    │  └───────────────┘  │                  │
+│                    └──────────┬──────────┘                  │
+│                               │                             │
+│                               ▼                             │
+│              ┌────────────────────────────────┐             │
+│              │   ADLS Gen2 (Data Lake)        │             │
+│              │                                │             │
+│              │  📁 Transient (staging)        │             │
+│              │  📁 Bronze (raw)               │             │
+│              │  📁 Silver (cleaned)           │             │
+│              │  📁 Gold (aggregated)          │             │
+│              │  📁 Archive (historical)       │             │
+│              └────────────────────────────────┘             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ Recursos Criados
+## 🛠️ Stack Tecnológica
 
-- ✅ **Azure Synapse Workspace**
-  - Spark Pool configurado com Delta Lake
-  - Firewall rules configuradas
-  
-- ✅ **Storage Account (ADLS Gen2)** com containers:
-  - `transient` - Dados temporários
-  - `bronze` - Raw data
-  - `silver` - Cleaned data
-  - `gold` - Aggregated data
-  - `archive` - Historical data
-  - `synapse` - Workspace files
+### Orquestração & Workflow
+- **Apache Airflow** - Orquestração de pipelines e scheduling
+- **Airbyte** - Plataforma de ingestão de dados (ELT)
 
-- ✅ **Service Principal** para Airflow/Airbyte
-  - Permissões RBAC no Synapse
-  - Permissões de leitura/escrita no Storage
-  - Credenciais automaticamente geradas
+### Processamento & Armazenamento
+- **Azure Synapse Analytics** - Data warehouse e processamento distribuído
+- **Apache Spark** (via Synapse) - Processamento big data
+- **Delta Lake** - Camada de armazenamento ACID
+- **Azure Data Lake Storage Gen2** - Data lake escalável
 
-- ✅ **Role Assignments** configuradas automaticamente
+### Infraestrutura como Código
+- **Terraform** - Provisionamento de infraestrutura na Azure
+- **Azure CLI** - Automação e configuração
 
-## 🚀 Como Usar
+### Linguagens & Ferramentas
+- **Python** - Scripts e transformações
+- **PySpark** - Processamento distribuído de dados
+- **SQL** - Queries e transformações
 
-### 1. Clonar o repositório
+## 📁 Estrutura do Projeto
+
+```
+licitacao_gov/
+│
+├── airflow/                    # Configuração do Airflow
+│   ├── dags/                   # DAGs de orquestração
+│   │   └── licitacoes_dag.py  # Pipeline principal
+│
+├── airbyte/                    # Configuração do Airbyte
+│   ├── sources/                # Definições de fontes de dados
+│
+├── src/                    # Fonte do código
+│   ├── notebooks/              # Notebooks PySpark
+│   │   ├── bronze_to_silver.ipynb
+│   │   └── silver_to_gold.ipynb
+│
+├── infra/                      # Infraestrutura como Código
+│   ├── main.tf                 # Recursos principais
+│   ├── variables.tf            # Variáveis
+│   ├── outputs.tf              # Outputs
+│   └── README.md               # 📖 [Documentação de Infra](infra/README.md)
+│
+├── scripts/                    # Scripts auxiliares
+│   ├── setup.sh                # Setup inicial
+│   └── deploy.sh               # Deploy automatizado
+│
+├── docs/                       # Arquivos para doc
+├── .gitignore
+└── README.md                   # Este arquivo
+```
+
+## 🚀 Como Executar o Projeto
+
+### Pré-requisitos
+
+- **Azure Subscription** ativa
+- **Terraform** >= 1.0
+- **Azure CLI** autenticado
+- **Docker** & **Docker Compose**
+- **Python** >= 3.9
+
+### 1️⃣ Provisionar Infraestrutura
 
 ```bash
-git clone <seu-repo>
-cd infra
-```
+cd infra/
 
-### 2. Configurar variáveis
+# Configurar variáveis
+cp terraform.tfvars.example terraform.tfvars
+# Edite terraform.tfvars com suas configurações
 
-Crie um arquivo `terraform.tfvars`:
-
-```hcl
-subscription_id        = "sua subscription"
-synapse_admin_login    = "sqladmin"
-synapse_admin_password = "SuaSenhaSegura123!"
-```
-
-⚠️ **IMPORTANTE**: Adicione `terraform.tfvars` ao `.gitignore`
-
-### 3. Autenticar no Azure
-
-```bash
-az login
-```
-
-### 4. Executar o Terraform
-
-```bash
-# Inicializar
+# Provisionar recursos Azure
 terraform init
-
-# Ver o plano de execução
 terraform plan
-
-# Aplicar as mudanças
 terraform apply
+
+# Salvar credenciais do Service Principal
+terraform output -raw airflow_client_secret > ../credentials.txt
 ```
 
-### 5. Obter as credenciais
+📖 **Detalhes**: Veja [infra/README.md](infra/README.md) para documentação completa da infraestrutura.
+
+### 2️⃣ Configurar Airflow
 
 ```bash
-# Ver todas as informações
-terraform output setup_instructions
+# Inicializar projeto Astro
+astro dev init
 
-# Obter apenas o client secret (sensível)
-terraform output -raw airflow_client_secret
+# Subir o Airflow localmente
+astro dev start
 
-# Obter credenciais em JSON
-terraform output -json credentials_json
+# Acessar UI
+# http://localhost:8080
+# Usuário: admin / Senha: admin
+
+# Configurar conexão Azure Synapse, adls e airbyte
+
 ```
 
-## 🔧 Configuração no Airflow
-
-### Opção 1: Via UI do Airflow
-
-1. Acesse o Airflow UI
-2. Vá em **Admin** → **Connections**
-3. Clique em **+** para adicionar uma nova conexão
-4. Configure:
-   - **Connection Id**: `azure_synapse_default`
-   - **Connection Type**: `Azure Synapse`
-   - **Client ID**: (obter do output)
-   - **Client Secret**: `terraform output -raw airflow_client_secret`
-   - **Tenant ID**: (obter do output)
-   - **Subscription ID**: (obter do output)
-
-### Opção 2: Via variáveis de ambiente
+### 3️⃣ Configurar Airbyte
 
 ```bash
-export AZURE_CLIENT_ID="<client_id_do_output>"
-export AZURE_CLIENT_SECRET="$(terraform output -raw airflow_client_secret)"
-export AZURE_TENANT_ID="<tenant_id_do_output>"
-export AZURE_SUBSCRIPTION_ID="<subscription_id_do_output>"
+sudo abctl local install
+
+# Acessar UI
+# http://localhost:8000
+# Usuário: airbyte / Senha: *pega utilizando o comando abaixo:*
+sudo abctl local credentials
 ```
 
-## 🔧 Configuração no Airbyte
+### Configurar source e destination
 
-1. Crie uma nova **Source** ou **Destination** do tipo:
-   - Azure Blob Storage
-   - Azure Data Lake Gen2
+Crie uma nova source de API pela aba BUILDER na UI, e importe o yaml que esta em airbyte/sources/licitacoes_gov_br.yaml
 
-2. Configure:
-   - **Account Name**: `lablicitacoessa`
-   - **Authentication**: Service Principal
-   - **Client ID**: (obter do output)
-   - **Client Secret**: `terraform output -raw airflow_client_secret`
-   - **Tenant ID**: (obter do output)
-   - **Container**: `transient`, `bronze`, `silver`, `gold`, ou `archive`
+Apos isso configure uma connection com a destination Azure Blob Storage
 
-## 📦 Estrutura do Projeto
+
+### 4️⃣ Executar Pipeline
+
+**Via Airflow UI, ative e execute a DAG 'licitacoes_dag'**
+
+
+## 📊 Camadas de Dados (Medallion Architecture)
+
+### 🥉 Bronze (Raw)
+- Dados brutos ingeridos sem transformação
+- Formato: JSON/Parquet original
+- Retenção: 90 dias
+
+### 🥈 Silver (Cleaned)
+- Dados limpos e normalizados
+- Validações de qualidade aplicadas
+- Formato: Delta Lake
+- Retenção: 1 ano
+
+### 🥇 Gold (Aggregated)
+- Dados agregados e otimizados para análise
+- KPIs e métricas de negócio
+- Formato: Delta Lake / Tabela física
+- Retenção: Indefinida
+
+### 📦 Transient
+- Área de staging temporária
+- Dados intermediários durante processamento
+
+### 🗄️ Archive
+- Dados históricos arquivados
+- Conformidade e auditoria
+- Armazenamento de longo prazo
+
+## 🔄 Fluxo de Dados
 
 ```
-.
-├── main.tf              # Recursos principais
-├── variables.tf         # Definição de variáveis
-├── outputs.tf           # Outputs e credenciais
-├── terraform.tfvars     # Valores das variáveis (NÃO COMMITAR)
-├── .gitignore          # Arquivos a ignorar
-└── README.md           # Esta documentação
+1. Ingestão (Airbyte)
+   └─> API Licitações → Transient (JSON)
+
+2. Raw Layer (Airflow → Synapse)
+   └─> Transient → Bronze (Parquet)
+
+3. Archive (Airflow)
+   └─> Bronze → Archive (histórico)
+
+4. Cleaned Layer (Synapse Spark)
+   └─> Bronze → Silver (Delta Lake)
+        ├─ Validação de schema
+        ├─ Limpeza de dados
+        ├─ Deduplicação
+        └─ Normalização
+
+5. Aggregated Layer (Synapse Spark)
+   └─> Silver → Gold (Delta Lake)
+        ├─ Agregações
+        ├─ KPIs
+        └─ Tabelas dimensionais
+
 ```
 
-## 🔐 Segurança
+## 🔐 Segurança & Governança
 
-- ✅ Service Principal com princípio do menor privilégio
-- ✅ Client Secret com data de expiração definida
-- ✅ Outputs sensíveis marcados como `sensitive = true`
-- ⚠️ **NUNCA** commite `terraform.tfvars` ou arquivos `.tfstate` no git
-- ⚠️ Firewall configurado para permitir todos IPs (ajuste para produção)
+- ✅ **Autenticação**: Service Principal com RBAC
+- ✅ **Criptografia**: Em repouso (Storage) e em trânsito (TLS)
+- ✅ **Auditoria**: Logs centralizados no Azure Monitor
+- ✅ **Firewall**: Regras de rede configuradas
+- ✅ **Secrets**: Gerenciados via Terraform (sensitive outputs)
+- ✅ **LGPD/GDPR**: Dados anonimizados quando necessário
 
-## 🧹 Limpeza
+## 📈 Monitoramento
 
-Para destruir toda a infraestrutura:
+- **Airflow UI**: Status de DAGs e tasks
+- **Azure Monitor**: Métricas de recursos
+- **Synapse Studio**: Execução de pipelines e queries
 
-```bash
-terraform destroy
-```
+## 🤝 Contribuindo
 
-⚠️ **CUIDADO**: Isso vai deletar TODOS os recursos criados, incluindo dados!
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
-## 📝 Variáveis Disponíveis
+## 👥 Autor
 
-| Variável | Descrição | Padrão | Obrigatório |
-|----------|-----------|--------|-------------|
-| `synapse_admin_login` | Username do admin SQL | `sqladmin` | Não |
-| `synapse_admin_password` | Password do admin SQL | - | Sim |
+- **Arthur Andrade** - [GitHub](https://github.com/arthraw)
 
-## 🔄 Atualizações
+## 📚 Documentação Adicional
 
-Para atualizar a infraestrutura após mudanças no código:
+- 🏗️ **[Infraestrutura (Terraform)](infra/README.md)** - Setup completo da infraestrutura Azure
 
-```bash
-terraform plan   # Ver mudanças
-terraform apply  # Aplicar mudanças
-```
+---
 
-## 🐛 Troubleshooting
-
-### Erro: "ClientIpAddressNotAuthorized"
-
-**Solução**: O firewall do Synapse está bloqueando seu IP. Execute via portal ou ajuste as regras de firewall.
-
-### Erro: "resource already exists"
-
-**Solução**: Importe o recurso existente:
-```bash
-terraform import <resource_type>.<name> <azure_resource_id>
-```
-
-### Erro: Permissões insuficientes
-
-**Solução**: Verifique se você tem permissões para:
-- Criar Service Principals
-- Atribuir roles RBAC
-- Criar recursos no Resource Group
-
-## 📞 Suporte
-
-Para issues e sugestões, abra uma issue no GitHub.
-
-## 📄 Licença
-
-MIT License
+<div align="center">
+  <p>Feito com ❤️ usando tecnologias open source e Azure</p>
+  <p>⭐ Se este projeto foi útil, considere dar uma estrela!</p>
+</div>
