@@ -1,7 +1,0 @@
-airbyteServer:
-  service:
-    type: NodePort
-    ports:
-      http:
-        port: 8001
-        nodePort: 30080
