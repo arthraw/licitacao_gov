@@ -7,7 +7,7 @@ from datetime import datetime
 from airflow.providers.standard.sensors.python import PythonSensor
 
 AIRBYTE_CONN_NAME = "airbyte_conn"
-AIRBYTE_CONNECTION_ID = "405b2bcc-c792-47fd-9ba5-12740ec54c67"
+AIRBYTE_CONNECTION_ID = "405b2bcc-c792-47fd-9ba5-12740ec54c67" # Id da conexão criada no Airbyte (Presente na url do Airbyte)
 AZURE_DATA_LAKE_GEN2_CONN_ID = "azure_data_lake_v2"
 AZURE_SYNAPSE_CONN_ID = "azure_synapse_workspace"
 year = datetime.now().year
@@ -16,7 +16,7 @@ year = datetime.now().year
 @dag(
     dag_id="licitacoes_dag",
     catchup=False,
-    start_date=datetime(2025, 1, 1),
+    start_date=datetime(2026, 1, 1),
     schedule=None,
     tags=["licitacoes", "pipeline"],
 )
