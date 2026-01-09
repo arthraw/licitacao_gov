@@ -105,6 +105,13 @@ def licitacoes_dag():
 
     run_silver = run_silver_pipeline()
 
-    ingest_data_from_api >> wait_data >> lastest_file >> run_bronze_pipeline(lastest_file) >> run_silver
+    @task()
+    def run_gold_pipeline():
+        run_id = run_pipeline(pipe_name="gold_licitacoes_pipeline")
+        return run_id
+
+    run_gold = run_gold_pipeline()
+    
+    ingest_data_from_api >> wait_data >> lastest_file >> run_bronze_pipeline(lastest_file) >> run_silver >> run_gold
 
 licitacoes_dag()
