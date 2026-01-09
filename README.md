@@ -157,6 +157,69 @@ Crie uma nova source de API pela aba BUILDER na UI, e importe o yaml que esta em
 
 Apos isso configure uma connection com a destination Azure Blob Storage
 
+## Synapse Workspace
+### Importar Notebooks
+
+No Synapse Studio, navegue até Develop (ícone de código </> no menu lateral)
+Clique em + → Import
+Selecione todos os notebooks da pasta src/notebooks/:
+
+Transient_to_Bronze.ipynb
+Bronze_to_Silver.ipynb
+Silver_to_Gold.ipynb
+
+
+Aguarde o upload completar
+Publique as mudanças clicando em Publish all no topo
+
+### Criar Pipelines
+Você precisa criar 3 pipelines, uma para cada camada de transformação.
+
+Pipeline 1: Transient → Bronze
+Nome: bronze_licitacoes_pipeline
+
+Vá em Integrate (ícone de pipeline no menu lateral)
+Clique em + → Pipeline
+Nomeie como: bronze_licitacoes_pipeline
+Arraste um Notebook activity para o canvas
+Configure o notebook:
+
+Notebook: Selecione Transient_to_Bronze
+Spark pool: Selecione sparkpool1
+
+
+IMPORTANTE: Configurar parâmetro de entrada
+
+Vá na aba Settings do notebook activity
+Em Base parameters, clique em + New
+Adicione:
+
+Name: input_file
+Type: String
+Value: @pipeline().parameters.input_file
+
+
+
+
+Configure o parâmetro no nível da pipeline:
+
+Clique em uma área vazia do canvas (para selecionar a pipeline)
+Vá na aba Parameters
+Clique em + New
+Adicione:
+
+Name: input_file
+Type: String
+Default value: (deixe vazio ou use um caminho de teste)
+
+
+
+
+Publique a pipeline: Publish all
+
+
+💡 Por que o parâmetro input_file?
+O Airbyte vai passar o caminho do arquivo gerado dinamicamente para esta pipeline via Airflow.
 
 ### 4️⃣ Executar Pipeline
 
